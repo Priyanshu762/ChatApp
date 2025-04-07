@@ -35,25 +35,6 @@ const userSchema = new mongoose.Schema({
         maxLength: 500,
         default: ""
     },
-    friends: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }],
-    friendRequests: [{
-        from: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        },
-        status: {
-            type: String,
-            enum: ['pending', 'accepted', 'rejected'],
-            default: 'pending'
-        },
-        createdAt: {
-            type: Date,
-            default: Date.now
-        }
-    }],
     blockedUsers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

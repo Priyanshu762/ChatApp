@@ -1,6 +1,6 @@
 import express from "express";
 // import friendController from "../controllers/friendController.js";
-import { sendFriendRequest, acceptFriendRequest, rejectFriendRequest, getFriendRequests, getFriends } from "../controllers/friendController.js";
+import { sendFriendRequest, acceptFriendRequest, rejectFriendRequest, getFriendRequests, getFriends, searchFriend } from "../controllers/friendController.js";
 import protect from "../middlewares/authMiddleware.js";
 
 const   router = express.Router();
@@ -9,6 +9,7 @@ const   router = express.Router();
 router.use(protect);
 
 // Friend request routes
+
 router.post('/request/:userId', sendFriendRequest);
 router.post('/request/:requestId/accept', acceptFriendRequest);
 router.post('/request/:requestId/reject', rejectFriendRequest);
@@ -16,5 +17,9 @@ router.post('/request/:requestId/reject', rejectFriendRequest);
 // Friend list routes
 router.get('/requests', getFriendRequests);
 router.get('/list', getFriends);
+
+//Find Friend by name or username
+
+router.get('/findfriend/:user',searchFriend)
 
 export default router; 

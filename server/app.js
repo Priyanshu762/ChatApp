@@ -1,18 +1,4 @@
-// const express = require('express');
-// const mongoose = require('mongoose');
-// const cors = require('cors');
-// const morgan = require('morgan');
-// const helmet = require('helmet');
-// const compression = require('compression');
-// const rateLimit = require('express-rate-limit');
-// const mongoSanitize = require('express-mongo-sanitize');
-// const xss = require('xss-clean');
-// const hpp = require('hpp');
-// const cookieParser = require('cookie-parser');
 
-// const authRoutes = require('./routes/authRoutes');
-// const friendRoutes = require('./routes/friendRoutes');
-// const chatRoutes = require('./routes/chatRoutes');
 
 import AppError from './utils/appError.js';
 import globalErrorHandler from './controllers/errorController.js';
@@ -39,8 +25,9 @@ app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    credentials: true
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // Security Middleware
@@ -56,12 +43,12 @@ const limiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     message: 'Too many requests from this IP, please try again in an hour!'
 });
-app.use('/api', limiter);
+// app.use('/api', limiter);
 
 // Development logging
-if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
-}
+// if (process.env.NODE_ENV === 'development') {
+//     app.use(morgan('dev'));
+// }
 
 // Compression middleware
 app.use(compression());

@@ -46,13 +46,14 @@ export const register = async (req, res, next) => {
         // Send success response
         res.status(201).json({
             status: 'success',
-            data: {
+            message: "User created successfully",
+            user: {
                 _id: newUser._id,
                 fullName: newUser.fullName,
                 username: newUser.username,
                 profilePicture: newUser.profilePicture,
-                token
-            }
+            },
+            token: token
         });
 
     } catch (error) {
@@ -63,7 +64,7 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
     try {
         const { username, password } = req.body;
-
+        console.log(username, password);
         // Find user
         const user = await User.findOne({ username });
         if (!user) {
@@ -72,7 +73,7 @@ export const login = async (req, res, next) => {
                 message: "Invalid username or password"
             });
         }
-
+        console.log(user);
         // Validate password
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
@@ -88,15 +89,23 @@ export const login = async (req, res, next) => {
         // Send success response
         res.status(200).json({
             status: 'success',
-            data: {
+            message: "Logged in successfully",
+            user: {
                 _id: user._id,
                 username: user.username,
                 fullName: user.fullName,
                 profilePicture: user.profilePicture,
                 bio: user.bio,
                 settings: user.settings,
-                token
-            }
+                status: user.status,
+                lastSeen: user.lastSeen,
+                isOnline: user.isOnline,
+                isTyping: user.isTyping,
+                isActive: user.isActive,
+                isBlocked: user.isBlocked,
+                isDeleted: user.isDeleted,
+            },
+            token: token
         });
 
     } catch (error) {
@@ -140,7 +149,7 @@ export const getCurrentUser = async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            data: user
+            user: user
         });
 
     } catch (error) {
@@ -148,9 +157,16 @@ export const getCurrentUser = async (req, res, next) => {
     }
 };
 
-
-
-
-
-
+export const verifyToken = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        res.status(200).json({
+            status: 'success',
+            user: decoded
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 

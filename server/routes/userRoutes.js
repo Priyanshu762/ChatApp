@@ -19,9 +19,6 @@ router.use(protect);
 router.patch('/profile', updateProfile);
 router.patch('/settings', updateSettings);
 
-// Friend routes
-router.post('/friend-request', sendFriendRequest);
-router.patch('/friend-request/:requestId', respondToFriendRequest);
 
 // Block routes
 router.post('/block/:userId', blockUser);

@@ -34,6 +34,8 @@ export const sendFriendRequest = async (req, res, next) => {
         });
 
         if (existingRequest) {
+            console.log("A friend request already exsit");
+            
             return next(new AppError('A friend request already exists between you and this user.', 400));
         }
 
@@ -163,7 +165,101 @@ export const getFriends = async (req, res, next) => {
         next(error);
     }
 };
+// export const searchFriend = async(req ,res,next)=>{
+// console.log("Started finding");
+// try {   
+//     const user=req.params.user;        
+//     const currentUserId = req.user._id;
+//     console.log("Searching for user:", user);
+//     const users = await User.find({
+//         $or: [
+//             { username: { $regex: user, $options: 'i' } },
+//             { fullName: { $regex: user, $options: 'i' } }
+//         ],
+//         _id: { $ne: currentUserId }
+//     })
+//     .select('username fullName profilePicture status lastSeen')
+//     .limit(10);
+//     console.log("Found users:", users);
 
+//     res.status(200).json({
+//         status: 'success',
+//         data: users
+//     });
+
+// } catch (error) {
+//     next(error);
+// }
+
+// }
+export const searchFriend = async (req, res, next) => {
+    try {
+        const searchQuery = req.params.user;
+        const currentUserId = req.user._id;
+
+        // Step 1: Search users (except self)
+        const matchedUsers = await User.find({
+            $or: [
+                { username: { $regex: searchQuery, $options: 'i' } },
+                { fullName: { $regex: searchQuery, $options: 'i' } }
+            ],
+            _id: { $ne: currentUserId }
+        })
+        .select('username fullName profilePicture status lastSeen _id')
+        .limit(20);
+
+        // Step 2: Fetch friendships where current user is involved
+        const friendships = await Friendship.find({
+            $or: [
+                { user1: currentUserId },
+                { user2: currentUserId }
+            ]
+        });
+
+        const friendIds = friendships.map(f => {
+            return f.user1.toString() === currentUserId.toString()
+                ? f.user2.toString()
+                : f.user1.toString();
+        });
+
+        // Step 3: Get all friend requests involving current user (sent or received)
+        const friendRequests = await FriendRequest.find({
+            $or: [
+                { sender: currentUserId },
+                { recipient: currentUserId }
+            ]
+        }).select('sender recipient');
+
+        // Collect all IDs involved in pending requests
+        const requestInvolvedIds = friendRequests.map(fr => {
+            // exclude only if request is still 'pending'
+            return fr.sender.toString() === currentUserId.toString()
+                ? fr.recipient.toString()
+                : fr.sender.toString();
+        });
+
+        // Step 4: Final filtering
+        const filteredUsers = matchedUsers.filter(user => {
+            const id = user._id.toString();
+            return (
+                !friendIds.includes(id) &&       // not already friend
+                !requestInvolvedIds.includes(id) // no pending requests either way
+            );
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: filteredUsers
+        });
+
+    } catch (error) {
+        console.error("❌ searchFriend error:", error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to search for friends'
+        });
+    }
+};
 export default {
     sendFriendRequest,
     acceptFriendRequest,

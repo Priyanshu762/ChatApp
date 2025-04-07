@@ -41,49 +41,56 @@ export const sendMessage = async (req, res, next) => {
 };
 
 export const getChatHistory = async (req, res, next) => {
-    const { friendId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const skip = (page - 1) * limit;
+    try {
+        const { friendId } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const skip = (page - 1) * limit;
 
-    const friendship = await Friendship.findOne({
-        $or: [
-            { user1: req.user._id, user2: friendId },
-            { user1: friendId, user2: req.user._id }
-        ]
-    });
+        const friendship = await Friendship.findOne({
+            $or: [
+                { user1: req.user._id, user2: friendId },
+                { user1: friendId, user2: req.user._id }
+            ]
+        });
 
-    if (!friendship) {
-        return next(new AppError('Can only view chat history with friends', 403));
-    }
-
-    const messages = await ChatMessage.find({
-        $or: [
-            { sender: req.user._id, recipient: friendId },
-            { sender: friendId, recipient: req.user._id }
-        ]
-    })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .populate('sender recipient', 'name email');
-
-    await ChatMessage.updateMany(
-        {
-            recipient: req.user._id,
-            sender: friendId,
-            isRead: false
-        },
-        { isRead: true }
-    );
-
-    res.status(200).json({
-        status: 'success',
-        data: {
-            messages: messages.reverse()
+        if (!friendship) {
+            return next(new AppError('Can only view chat history with friends', 403));
         }
-    });
+
+        const messages = await ChatMessage.find({
+            $or: [
+                { sender: req.user._id, recipient: friendId },
+                { sender: friendId, recipient: req.user._id }
+            ]
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('sender recipient', 'name email');
+
+        // Mark as read
+        await ChatMessage.updateMany(
+            {
+                recipient: req.user._id,
+                sender: friendId,
+                isRead: false
+            },
+            { isRead: true }
+        );
+
+        // Always return messages, even if empty
+        res.status(200).json({
+            status: 'success',
+            data: {
+                messages: messages.reverse() // newest to oldest -> oldest to newest
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
 };
+
 
 export const getUnreadCount = async (req, res, next) => {
     const unreadCount = await ChatMessage.countDocuments({

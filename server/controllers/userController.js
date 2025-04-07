@@ -226,27 +226,3 @@ export const unblockUser = async (req, res, next) => {
     }
 };
 
-export const searchUsers = async (req, res, next) => {
-    try {
-        const { query } = req.query;
-        const currentUserId = req.user._id;
-
-        const users = await User.find({
-            $or: [
-                { username: { $regex: query, $options: 'i' } },
-                { fullName: { $regex: query, $options: 'i' } }
-            ],
-            _id: { $ne: currentUserId }
-        })
-        .select('username fullName profilePicture status lastSeen')
-        .limit(10);
-
-        res.status(200).json({
-            status: 'success',
-            data: users
-        });
-
-    } catch (error) {
-        next(error);
-    }
-}; 

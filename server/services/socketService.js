@@ -5,7 +5,7 @@ import User from '../models/userModel.js';
 const setupSocket = (server) => {
     const io = new Server(server, {
         cors: {
-            origin: process.env.CLIENT_URL || 'http://localhost:3000',
+            origin: process.env.CLIENT_URL || 'http://localhost:5173',
             credentials: true
         }
     });

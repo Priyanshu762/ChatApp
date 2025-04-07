@@ -21,7 +21,7 @@ mongoose.connect(process.env.MONGO_URI)
         console.log('Connected to MongoDB');
         server.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
-            console.log(`Socket.IO server is ready`);
+            // console.log(`Socket.IO server is ready`);
         });
     })
     .catch((err) => {
